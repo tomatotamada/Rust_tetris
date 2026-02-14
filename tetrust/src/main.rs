@@ -53,7 +53,13 @@ fn is_collision(field: &Field, pos: &Position, block: BlockKind) -> bool {
                 }
                 continue;
             }
-            if (field[pos.y + y + 1][pos.x + x] & BLOCKS[block as usize][y][x]) == 1 {
+            if pos.x + x >= FIELD_WIDTH {
+                if BLOCKS[block as usize][y][x] == 1 {
+                    return true;
+                }
+                continue;
+            }
+            if (field[pos.y + y][pos.x + x] & BLOCKS[block as usize][y][x]) == 1 {
                 return true;
             }
         }
@@ -97,11 +103,19 @@ fn main() {
     loop {
         //描画用フィールドの生成
         let mut field_buf = field;
+
+        //自然落下
+        let new_pos = Position {
+            x: pos.x,
+            y: pos.y + 1,
+        };
+
         //衝突判定
         if !is_collision(&field, &pos, BlockKind::I) {
             //衝突しなければ1マス下に移動
-            pos.y += 1;
+            pos = new_pos;
         }
+
         //ブロックをフィールドに配置
         for y in 0..4 {
             for x in 0..4 {
@@ -125,9 +139,38 @@ fn main() {
         }
         //1秒間スリープする
         thread::sleep(time::Duration::from_millis(1000));
+
+        //キー入力待ち
         match g.getch() {
+            Ok(Key::Left) => {
+                let new_pos = Position {
+                    x: pos.x - 1,
+                    y: pos.y,
+                };
+                if !is_collision(&field, &new_pos, BlockKind::I) {
+                    pos = new_pos;
+                }
+            }
+            Ok(Key::Right) => {
+                let new_pos = Position {
+                    x: pos.x + 1,
+                    y: pos.y,
+                };
+                if !is_collision(&field, &new_pos, BlockKind::I) {
+                    pos = new_pos;
+                }
+            }
+            Ok(Key::Down) => {
+                let new_pos = Position {
+                    x: pos.x,
+                    y: pos.y + 1,
+                };
+                if !is_collision(&field, &new_pos, BlockKind::I) {
+                    pos = new_pos;
+                }
+            }
             Ok(Key::Char('q')) => break,
-            _ => {} //その他のキーは無視
+            _ => (),
         }
     }
     //カーソルを再表示
