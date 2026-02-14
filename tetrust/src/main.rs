@@ -1,3 +1,4 @@
+use getch_rs::{Getch, Key};
 use std::{thread, time};
 
 //フィールドサイズ
@@ -87,12 +88,13 @@ fn main() {
     ];
 
     let mut pos = Position { x: 4, y: 0 };
+    let g = Getch::new();
 
     //画面クリア
     println!("\x1b[2J\x1b[H\x1b[?25l");
 
     //30マス下に移動
-    for _ in 0..30 {
+    loop {
         //描画用フィールドの生成
         let mut field_buf = field;
         //衝突判定
@@ -123,6 +125,10 @@ fn main() {
         }
         //1秒間スリープする
         thread::sleep(time::Duration::from_millis(1000));
+        match g.getch() {
+            Ok(Key::Char('q')) => break,
+            _ => {} //その他のキーは無視
+        }
     }
     //カーソルを再表示
     println!("\x1b[?25h");
