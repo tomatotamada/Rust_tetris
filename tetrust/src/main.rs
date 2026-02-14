@@ -47,7 +47,7 @@ struct Position {
 fn is_collision(field: &Field, pos: &Position, block: BlockKind) -> bool {
     for y in 0..4 {
         for x in 0..4 {
-            if pos.y + y + 1 >= FIELD_HEIGHT {
+            if pos.y + y >= FIELD_HEIGHT {
                 if BLOCKS[block as usize][y][x] == 1 {
                     return true;
                 }
@@ -111,7 +111,7 @@ fn main() {
         };
 
         //衝突判定
-        if !is_collision(&field, &pos, BlockKind::I) {
+        if !is_collision(&field, &new_pos, BlockKind::I) {
             //衝突しなければ1マス下に移動
             pos = new_pos;
         }
