@@ -98,6 +98,21 @@ fn main() {
                             }
                         }
                     }
+                    //ラインの削除処理
+                    for y in 1..FIELD_HEIGHT - 1 {
+                        let mut can_erase = true;
+                        for x in 1..FIELD_WIDTH - 1 {
+                            if field[y][x] == 0 {
+                                can_erase = false;
+                                break;
+                            }
+                        }
+                        if can_erase {
+                            for y2 in (2..=y).rev() {
+                                field[y2] = field[y2 - 1];
+                            }
+                        }
+                    }
                     //新しいブロックを生成
                     *pos = Position { x: 4, y: 0 };
                     *block = rand::random();
