@@ -1,42 +1,10 @@
 use getch_rs::{Getch, Key};
 use std::sync::{Arc, Mutex};
 use std::{thread, time};
-
-//フィールドサイズ
-const FIELD_WIDTH: usize = 11 + 2; //左右の壁分を追加
-const FIELD_HEIGHT: usize = 20 + 1; //底の壁分を追加
-type Field = [[usize; FIELD_WIDTH]; FIELD_HEIGHT];
-
-//ブロックの種類
-#[derive(Clone, Copy)]
-enum BlockKind {
-    I,
-    O,
-    S,
-    Z,
-    J,
-    L,
-    T,
-}
-
-//ブロックの形状
-type BlockShape = [[usize; 4]; 4];
-const BLOCKS: [BlockShape; 7] = [
-    //I
-    [[0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]],
-    //O
-    [[0, 0, 0, 0], [0, 1, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0]],
-    //S
-    [[0, 0, 0, 0], [0, 1, 1, 0], [1, 1, 0, 0], [0, 0, 0, 0]],
-    //Z
-    [[0, 0, 0, 0], [1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 0, 0]],
-    //J
-    [[0, 0, 0, 0], [1, 1, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0]],
-    //L
-    [[0, 0, 0, 0], [1, 1, 1, 0], [1, 0, 0, 0], [0, 0, 0, 0]],
-    //T
-    [[0, 0, 0, 0], [0, 1, 0, 0], [1, 1, 1, 0], [0, 0, 0, 0]],
-];
+mod block;
+mod field;
+use block::{BLOCKS, BlockKind};
+use field::{FIELD, FIELD_HEIGHT, FIELD_WIDTH, Field};
 
 //ポジション
 struct Position {
@@ -95,36 +63,11 @@ fn draw(field: &Field, pos: &Position) {
 }
 
 fn main() {
-    //フィールドの定義
-    let field = [
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    ];
-
     let pos = Arc::new(Mutex::new(Position { x: 4, y: 0 }));
     //画面クリア
     println!("\x1b[2J\x1b[H\x1b[?25l");
     //フィールドを描画
-    draw(&field, &pos.lock().unwrap());
+    draw(&FIELD, &pos.lock().unwrap());
 
     //自然落下処理
     {
@@ -138,11 +81,11 @@ fn main() {
                     x: pos.x,
                     y: pos.y + 1,
                 };
-                if !is_collision(&field, &new_pos, BlockKind::I) {
+                if !is_collision(&FIELD, &new_pos, BlockKind::I) {
                     *pos = new_pos;
                 }
                 //フィールドを描画
-                draw(&field, &pos);
+                draw(&FIELD, &pos);
             }
         });
     }
@@ -158,10 +101,10 @@ fn main() {
                     x: pos.x - 1,
                     y: pos.y,
                 };
-                if !is_collision(&field, &new_pos, BlockKind::I) {
+                if !is_collision(&FIELD, &new_pos, BlockKind::I) {
                     *pos = new_pos;
                 }
-                draw(&field, &pos);
+                draw(&FIELD, &pos);
             }
             Ok(Key::Right) => {
                 let mut pos = pos.lock().unwrap();
@@ -169,10 +112,10 @@ fn main() {
                     x: pos.x + 1,
                     y: pos.y,
                 };
-                if !is_collision(&field, &new_pos, BlockKind::I) {
+                if !is_collision(&FIELD, &new_pos, BlockKind::I) {
                     *pos = new_pos;
                 }
-                draw(&field, &pos);
+                draw(&FIELD, &pos);
             }
             Ok(Key::Down) => {
                 let mut pos = pos.lock().unwrap();
@@ -180,7 +123,7 @@ fn main() {
                     x: pos.x,
                     y: pos.y + 1,
                 };
-                if !is_collision(&field, &new_pos, BlockKind::I) {
+                if !is_collision(&FIELD, &new_pos, BlockKind::I) {
                     *pos = new_pos;
                 }
             }
